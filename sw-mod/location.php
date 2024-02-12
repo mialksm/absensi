@@ -12,17 +12,24 @@ if (empty($connection)) {
     $myip = $_SERVER['REMOTE_ADDR'];
 
     $client = new Client();
-    $response = $client->request('GET', "http://ip-api.com/json/" . $myip);
+    $response = $client->request('GET', "http://ip-api.com/json/" . $myip, [
+        'headers' => [
+            'Accept' => 'application/json', // Specify that you expect JSON
+        ],
+    ]);
 
     // Get the response body as a string
-    $body = $response->getBody();
+    $body = $response->getBody()->getContents();
+    $body = json_decode($body, true);
+
+    // Check if decoding was successful
+    if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
+        die("Error decoding JSON: " . json_last_error_msg());
+    }
 
     while ($row = mysqli_fetch_assoc($result_isp)) {
-        echo ($row['isp_name']);
-        echo " (" . $myip . " aa)";
-        echo " (" . $body['country'] . ")";
-        echo " (" . $body['countryCode'] . ")";
-        echo " (" . $body['city'] . ")";
-        echo " (" . $body['isp'] . ")";
+        if ($row['isp_name'] != $body['isp']) {
+            header('location:../404');
+        }
     }
 }
